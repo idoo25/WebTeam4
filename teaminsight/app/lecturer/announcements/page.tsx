@@ -29,16 +29,22 @@ export default function AnnouncementsPage() {
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
 
-  async function loadAnnouncements() {
-    setLoading(true);
-    const res = await fetch("/api/announcements");
-    const data = await res.json();
-    if (data.ok) setAnnouncements(data.announcements);
-    setLoading(false);
-  }
-
   useEffect(() => {
+    let mounted = true;
+    
+    async function loadAnnouncements() {
+      setLoading(true);
+      const res = await fetch("/api/announcements");
+      const data = await res.json();
+      if (mounted && data.ok) setAnnouncements(data.announcements);
+      if (mounted) setLoading(false);
+    }
+
     loadAnnouncements();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   async function publishAnnouncement() {
@@ -61,7 +67,10 @@ export default function AnnouncementsPage() {
     if (data.ok) {
       setTitle("");
       setBody("");
-      await loadAnnouncements(); // 🔁 auto refresh
+      // Reload announcements after publishing
+      const reloadRes = await fetch("/api/announcements");
+      const reloadData = await reloadRes.json();
+      if (reloadData.ok) setAnnouncements(reloadData.announcements);
     }
 
     setPublishing(false);

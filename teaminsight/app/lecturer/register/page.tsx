@@ -88,7 +88,7 @@ export default function LecturerRegisterPage() {
             setTimeout(() => {
                 router.push("/lecturer/login");
             }, 2000);
-        } catch (err) {
+        } catch {
             setError("Server error");
             setLoading(false);
         }

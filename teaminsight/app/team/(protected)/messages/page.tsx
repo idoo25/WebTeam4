@@ -59,12 +59,11 @@ function CreateThreadModal({
   const [subject, setSubject] = useState("");
   const [first, setFirst] = useState("");
 
-  useEffect(() => {
-    if (!open) {
-      setSubject("");
-      setFirst("");
-    }
-  }, [open]);
+  function handleClose() {
+    setSubject("");
+    setFirst("");
+    onClose();
+  }
 
   function submit() {
     const s = subject.trim();
@@ -87,7 +86,7 @@ function CreateThreadModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/30"
-        onClick={onClose}
+        onClick={handleClose}
         role="button"
         tabIndex={0}
       />
@@ -101,7 +100,7 @@ function CreateThreadModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-xl border bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-60"
             disabled={creating}
           >
@@ -210,7 +209,7 @@ export default function TeamMessagesPage() {
 
       if (!res.ok) throw new Error(data?.error || "Failed to load threads");
 
-      const list = (data?.threads || []) as Array<any>;
+      const list = (data?.threads || []) as Array<Partial<ThreadListItem>>;
       const mapped: ThreadListItem[] = list.map((t) => ({
         id: String(t.id),
         subject: String(t.subject || ""),
@@ -229,8 +228,9 @@ export default function TeamMessagesPage() {
       if (!selectedThreadId && mapped[0]?.id) {
         setSelectedThreadId(mapped[0].id);
       }
-    } catch (e: any) {
-      setThreadsError(String(e?.message || "Failed to load threads"));
+    } catch (e) {
+      const error = e as Error;
+      setThreadsError(String(error?.message || "Failed to load threads"));
       setThreads([]);
     } finally {
       setThreadsLoading(false);
@@ -256,7 +256,7 @@ export default function TeamMessagesPage() {
         unreadForTeam: Number(t?.unreadForTeam || 0),
         status: t?.status === "closed" ? "closed" : "open",
         messages: Array.isArray(t?.messages)
-          ? t.messages.map((m: any) => ({
+          ? t.messages.map((m: Partial<ThreadMessage>) => ({
               id: String(m?.id),
               role: m?.role === "lecturer" ? "lecturer" : "team",
               text: String(m?.text || ""),
@@ -270,8 +270,9 @@ export default function TeamMessagesPage() {
       setThreads((prev) =>
         prev.map((x) => (x.id === threadId ? { ...x, unreadForTeam: 0 } : x))
       );
-    } catch (e: any) {
-      setThreadError(String(e?.message || "Failed to load thread"));
+    } catch (e) {
+      const error = e as Error;
+      setThreadError(String(error?.message || "Failed to load thread"));
       setSelectedThread(null);
     } finally {
       setThreadLoading(false);
@@ -292,13 +293,15 @@ export default function TeamMessagesPage() {
     return () => {
       cancelled = true;
     };
+    // loadTeam and loadThreads are stable functions that don't depend on props/state
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!selectedThreadId) return;
     loadThread(selectedThreadId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // loadThread is a stable function that doesn't depend on props/state
+     
   }, [selectedThreadId]);
 
   useEffect(() => {
@@ -352,8 +355,9 @@ export default function TeamMessagesPage() {
       } else {
         await loadThreads(true);
       }
-    } catch (e: any) {
-      setThreadsError(String(e?.message || "Failed to create thread"));
+    } catch (e) {
+      const error = e as Error;
+      setThreadsError(String(error?.message || "Failed to create thread"));
     } finally {
       setCreatingThread(false);
     }
@@ -381,8 +385,9 @@ export default function TeamMessagesPage() {
 
       setDraft("");
       await Promise.all([loadThread(selectedThreadId), loadThreads(true)]);
-    } catch (e: any) {
-      setThreadError(String(e?.message || "Failed to send message"));
+    } catch (e) {
+      const error = e as Error;
+      setThreadError(String(error?.message || "Failed to send message"));
     } finally {
       setSending(false);
     }

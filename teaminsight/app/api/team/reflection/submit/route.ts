@@ -6,6 +6,13 @@ import { runReflectionSummary } from "@/lib/ai/gemini";
 
 export const runtime = "nodejs";
 
+type Answer = {
+  questionId: string;
+  prompt: string;
+  answer: string;
+  createdAt?: Date;
+};
+
 async function getTeamIdFromMe(req: Request): Promise<string | null> {
   const url = new URL(req.url);
   url.pathname = "/api/team/me";
@@ -36,7 +43,7 @@ export async function POST(req: Request) {
   if (!doc) return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
   if (!doc.aiSummary && doc.answers.length > 0) {
-    doc.aiSummary = await runReflectionSummary(doc.answers.map((a: any) => ({ prompt: a.prompt, answer: a.answer })));
+    doc.aiSummary = await runReflectionSummary((doc.answers as Answer[]).map((a) => ({ prompt: a.prompt, answer: a.answer })));
   }
 
   doc.status = "submitted";

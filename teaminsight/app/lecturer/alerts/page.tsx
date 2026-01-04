@@ -150,7 +150,7 @@ export default function LecturerAlertsPage() {
               <label className="block text-sm font-medium mb-1">Severity</label>
               <select
                 value={severityFilter}
-                onChange={(e) => setSeverityFilter(e.target.value as any)}
+                onChange={(e) => setSeverityFilter(e.target.value as "all" | "yellow" | "red")}
                 className="w-full border rounded px-3 py-2 bg-white"
               >
                 <option value="all">All</option>

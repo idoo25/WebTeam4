@@ -18,8 +18,11 @@ export async function POST(req: Request) {
   const valid =
     messages.length > 0 &&
     messages.every(
-      (m: any) =>
-        m &&
+      (m: unknown): m is { role: string; text: string } =>
+        typeof m === "object" &&
+        m !== null &&
+        "role" in m &&
+        "text" in m &&
         (m.role === "user" || m.role === "model") &&
         typeof m.text === "string"
     );

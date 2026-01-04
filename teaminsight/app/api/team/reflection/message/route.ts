@@ -7,6 +7,13 @@ import { runReflectionTurn, runReflectionSummary } from "@/lib/ai/gemini";
 
 export const runtime = "nodejs";
 
+type Answer = {
+  questionId: string;
+  prompt: string;
+  answer: string;
+  createdAt?: Date;
+};
+
 async function getTeamIdFromMe(req: Request): Promise<string | null> {
   const url = new URL(req.url);
   url.pathname = "/api/team/me";
@@ -84,7 +91,7 @@ export async function POST(req: Request) {
   // Explicit summary request
   if (wantsSummary(text) && doc.answers.length > 0) {
     const summary = await runReflectionSummary(
-      doc.answers.map((a: any) => ({ prompt: a.prompt, answer: a.answer }))
+      (doc.answers as Answer[]).map((a) => ({ prompt: a.prompt, answer: a.answer }))
     );
 
     doc.aiSummary = summary;
@@ -131,7 +138,7 @@ export async function POST(req: Request) {
   }
 
   // Ask Gemini for phrasing + advance suggestion (but server controls progression)
-  const raw: any = await runReflectionTurn({
+  const raw = await runReflectionTurn({
     currentQuestion: current.prompt,
     nextQuestion: next ? next.prompt : null,
     userAnswer: text,
@@ -140,7 +147,7 @@ export async function POST(req: Request) {
   // Support both implementations:
   // 1) raw is string JSON
   // 2) raw is already an object { assistantText, advance }
-  let parsed: any = null;
+  let parsed: { assistantText?: string; advance?: boolean } | null = null;
 
   if (typeof raw === "string") {
     try {
@@ -149,7 +156,7 @@ export async function POST(req: Request) {
       parsed = null;
     }
   } else if (raw && typeof raw === "object") {
-    parsed = raw;
+    parsed = raw as { assistantText?: string; advance?: boolean };
   }
 
   let assistantText =
@@ -176,7 +183,7 @@ export async function POST(req: Request) {
     // Decide what to ask next (server decides)
     if (doc.currentIndex >= REFLECTION_QUESTIONS.length) {
       const summary = await runReflectionSummary(
-        doc.answers.map((a: any) => ({ prompt: a.prompt, answer: a.answer }))
+        (doc.answers as Answer[]).map((a) => ({ prompt: a.prompt, answer: a.answer }))
       );
 
       doc.aiSummary = summary;
