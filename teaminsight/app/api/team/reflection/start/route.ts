@@ -3,27 +3,16 @@ import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db";
 import ReflectionChatSession from "@/models/ReflectionChatSession";
 import { REFLECTION_QUESTIONS } from "@/lib/reflection/questions";
+import { getTeamIdFromSession } from "@/lib/auth";
 
 export const runtime = "nodejs";
-
-async function getTeamIdFromMe(req: Request): Promise<string | null> {
-  const url = new URL(req.url);
-  url.pathname = "/api/team/me";
-  url.search = "";
-
-  const cookie = req.headers.get("cookie") ?? "";
-  const res = await fetch(url, { method: "GET", headers: { cookie } });
-  const data = await res.json().catch(() => ({}));
-
-  return data?.team?.teamId ?? data?.ok?.team?.teamId ?? null;
-}
 
 export async function POST(req: Request) {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("team_session")?.value;
   if (!sessionCookie) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const teamId = await getTeamIdFromMe(req);
+  const teamId = await getTeamIdFromSession(req);
   if (!teamId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));

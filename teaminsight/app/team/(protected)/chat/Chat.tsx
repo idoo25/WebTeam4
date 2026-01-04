@@ -35,9 +35,9 @@ export default function Chat() {
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error((data as any)?.error || "Request failed");
+      if (!res.ok) throw new Error((data as { error?: string })?.error || "Request failed");
 
-      setMessages([...next, { role: "model", text: (data as any).text ?? "" }]);
+      setMessages([...next, { role: "model", text: (data as { text?: string }).text ?? "" }]);
     } catch {
       setMessages([
         ...next,

@@ -126,7 +126,7 @@ export default function LecturerLoginPage() {
 
         {/* Link to registration */}
         <div className="text-center mt-4 text-sm text-gray-600">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/lecturer/register" className="text-blue-600 hover:underline">
             Create one here
           </Link>

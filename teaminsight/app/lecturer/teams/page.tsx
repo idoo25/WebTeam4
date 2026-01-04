@@ -27,12 +27,6 @@ export default function TeamsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("teamId");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-  const statusRank: Record<Team["status"], number> = {
-    red: 0,
-    yellow: 1,
-    green: 2,
-  };
-
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
       setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -43,6 +37,12 @@ export default function TeamsPage() {
   }
 
   const sortedTeams = useMemo(() => {
+    const statusRank: Record<Team["status"], number> = {
+      red: 0,
+      yellow: 1,
+      green: 2,
+    };
+
     const copy = [...teams];
 
     copy.sort((a, b) => {
@@ -154,7 +154,7 @@ export default function TeamsPage() {
                 <span className="text-sm text-gray-600">Status:</span>
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  onChange={(e) => setStatusFilter(e.target.value as "all" | Team["status"])}
                   className="border rounded-md px-3 py-2 text-sm bg-white"
                 >
                   <option value="all">All</option>

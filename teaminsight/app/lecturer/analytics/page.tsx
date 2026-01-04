@@ -28,13 +28,19 @@ type Alert = {
   severity: "yellow" | "red";
 };
 
+type AlertsPerTeam = {
+  teamId: string;
+  yellow: number;
+  red: number;
+};
+
 /* ---------- Page ---------- */
 
 export default function TeamsAnalyticsPage() {
   const [statusData, setStatusData] = useState<
     { name: string; value: number }[]
   >([]);
-  const [alertsData, setAlertsData] = useState<any[]>([]);
+  const [alertsData, setAlertsData] = useState<AlertsPerTeam[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,7 +68,7 @@ export default function TeamsAnalyticsPage() {
       ]);
 
       /* ---------- Alerts per team (by severity) ---------- */
-      const alertsPerTeam: any[] = [];
+      const alertsPerTeam: AlertsPerTeam[] = [];
 
       for (const team of teams) {
         const res = await fetch(`/api/alerts?teamId=${team.teamId}`);

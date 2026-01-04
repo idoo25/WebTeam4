@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { runTeamFeedbackChat } from "@/lib/ai/gemini";
+import { isValidChatMessage } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -15,14 +16,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const messages = Array.isArray(body?.messages) ? body.messages : [];
 
-  const valid =
-    messages.length > 0 &&
-    messages.every(
-      (m: any) =>
-        m &&
-        (m.role === "user" || m.role === "model") &&
-        typeof m.text === "string"
-    );
+  const valid = messages.length > 0 && messages.every(isValidChatMessage);
 
   if (!valid) {
     return NextResponse.json({ error: "Invalid messages" }, { status: 400 });

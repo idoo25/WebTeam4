@@ -46,7 +46,7 @@ export default function TeamLoginPage() {
       }
 
       router.push("/team");
-    } catch (err) {
+    } catch {
       setErrorMsg("Network error. Please try again.");
     } finally {
       setLoading(false);

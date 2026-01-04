@@ -17,6 +17,12 @@ const ai = new GoogleGenAI({ apiKey });
 
 export type ChatMsg = { role: "user" | "model"; text: string };
 
+/**
+ * Internal helper to run a chat with Gemini AI
+ * @param systemPrompt - The system prompt to set context for the AI
+ * @param messages - Array of chat messages
+ * @returns The AI response text
+ */
 async function runChat(systemPrompt: string, messages: ChatMsg[]) {
   const contents = [
     { role: "user" as const, parts: [{ text: systemPrompt }] },
@@ -34,18 +40,31 @@ async function runChat(systemPrompt: string, messages: ChatMsg[]) {
   return response.text ?? "";
 }
 
+/**
+ * Run team feedback chat with Gemini AI
+ * @param messages - Array of chat messages
+ * @returns The AI response text
+ */
 export async function runTeamFeedbackChat(messages: ChatMsg[]) {
   return runChat(TEAM_FEEDBACK_SYSTEM_PROMPT, messages);
 }
 
+/**
+ * Run team free chat with Gemini AI for general collaboration topics
+ * @param messages - Array of chat messages
+ * @returns The AI response text
+ */
 export async function runTeamFreeChat(messages: ChatMsg[]) {
   return runChat(TEAM_FREE_CHAT_SYSTEM_PROMPT, messages);
 }
 
 /**
- * NOTE:
- * This function corresponds to "model-driven" reflection (Method B).
+ * Run team reflection chat with Gemini AI (Method B: Model-driven)
+ * NOTE: This function corresponds to "model-driven" reflection (Method B).
  * For DB-driven reflection (Method A), use runReflectionTurn/runReflectionSummary below.
+ * 
+ * @param messages - Array of chat messages
+ * @returns The AI response text
  */
 export async function runTeamReflectionChat(messages: ChatMsg[]) {
   return runChat(TEAM_REFLECTION_SYSTEM_PROMPT, messages);
@@ -66,6 +85,11 @@ export type ReflectionTurnResult = {
   advance: boolean;
 };
 
+/**
+ * Strip markdown code fences from a string
+ * @param s - String potentially wrapped in code fences
+ * @returns Cleaned string without code fences
+ */
 function stripCodeFences(s: string) {
   const t = (s || "").trim();
   if (t.startsWith("```")) {
@@ -74,6 +98,13 @@ function stripCodeFences(s: string) {
   return t;
 }
 
+/**
+ * Safely parse reflection turn result from AI response
+ * Provides fallback if parsing fails
+ * 
+ * @param raw - Raw response from AI
+ * @returns Parsed reflection turn result with assistantText and advance flag
+ */
 function safeParseTurnResult(raw: string): ReflectionTurnResult {
   const cleaned = stripCodeFences(raw);
 
@@ -94,6 +125,13 @@ function safeParseTurnResult(raw: string): ReflectionTurnResult {
   }
 }
 
+/**
+ * Run a single turn of guided reflection
+ * Asks Gemini to evaluate the user's answer and decide whether to advance to the next question
+ * 
+ * @param input - Reflection turn input with current question, next question, and user answer
+ * @returns Promise resolving to reflection turn result with AI response and advance decision
+ */
 export async function runReflectionTurn(input: ReflectionTurnInput): Promise<ReflectionTurnResult> {
   const payload = JSON.stringify(input);
 
@@ -108,6 +146,12 @@ export async function runReflectionTurn(input: ReflectionTurnInput): Promise<Ref
   return safeParseTurnResult(response.text ?? "{}");
 }
 
+/**
+ * Generate a summary of reflection answers using Gemini AI
+ * 
+ * @param answers - Array of question-answer pairs from the reflection session
+ * @returns Promise resolving to AI-generated summary in Hebrew
+ */
 export async function runReflectionSummary(
   answers: Array<{ prompt: string; answer: string }>
 ): Promise<string> {

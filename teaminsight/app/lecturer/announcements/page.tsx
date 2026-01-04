@@ -11,7 +11,7 @@
   ✔ Tailwind CSS
 */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 type Announcement = {
@@ -29,17 +29,19 @@ export default function AnnouncementsPage() {
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
 
-  async function loadAnnouncements() {
+  const loadAnnouncements = useCallback(async () => {
     setLoading(true);
     const res = await fetch("/api/announcements");
     const data = await res.json();
     if (data.ok) setAnnouncements(data.announcements);
     setLoading(false);
-  }
+  }, []);
 
   useEffect(() => {
-    loadAnnouncements();
-  }, []);
+    // Intentionally loading data on mount - this is the recommended pattern for data fetching
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadAnnouncements();
+  }, [loadAnnouncements]);
 
   async function publishAnnouncement() {
     if (!title.trim() || !body.trim()) return;
@@ -61,7 +63,8 @@ export default function AnnouncementsPage() {
     if (data.ok) {
       setTitle("");
       setBody("");
-      await loadAnnouncements(); // 🔁 auto refresh
+      // Reload announcements after publishing
+      await loadAnnouncements();
     }
 
     setPublishing(false);
