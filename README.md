@@ -28,7 +28,7 @@
   - `lib/db.js` (MongoDB connection via Mongoose)
   - `lib/teamSession.js` (team session cookie signing/verification)
   - `lib/ai/`
-    - `lib/ai/gemini.ts` (Gemini runtime wrapper)
+    - `lib/ai/cerebras.ts` (Cerebras runtime wrapper)
     - `lib/ai/prompts.ts` (prompts)
   - `lib/reflection/questions.ts` (reflection questions order)
 - `models/` (Mongoose schemas / collections)
@@ -171,7 +171,7 @@ The backend is responsible for:
 - Connecting to MongoDB (Mongoose)
 - Handling business logic
 - Exposing API endpoints for the frontend
-- Gemini integration for AI features
+- Cerebras integration for AI features
 
 ### Team authentication (cookie session)
 After a successful `POST /api/team/join`, the server sets an httpOnly cookie named `team_session`.  
@@ -187,7 +187,7 @@ Session signing/verification is implemented in `lib/teamSession.js`.
 - **POST `/api/team/join`**
 - **GET `/api/team/me`**
 
-#### 3. Team AI (Gemini)
+#### 3. Team AI (Cerebras)
 - **POST `/api/team/ai/free`**
 - **POST `/api/team/ai/feedback`**
 
@@ -253,9 +253,9 @@ Frontend → Next.js API Route → Mongoose → MongoDB → API Response → Fro
 
 ---
 
-## 8. AI (Gemini): Free Chat & Guided Reflection
+## 8. AI (Cerebras): Free Chat & Guided Reflection
 
-The system supports two Gemini-based experiences for teams:
+The system supports two Cerebras-based experiences for teams:
 
 ### A) Team Free Chat
 **Goal:** Free-form team conversation (practical advice, daily collaboration issues, process improvements).  
@@ -279,9 +279,9 @@ The system supports two Gemini-based experiences for teams:
 **Session per tab:** Each tab uses a unique `sessionId` (parallel reflections are supported).  
 **Persistence:** Stored in MongoDB (answers, status, summary) for later insights.
 
-### Prompts and Gemini runtime
+### Prompts and Cerebras runtime
 - `lib/ai/prompts.ts` – prompts are written in English; assistant output is Hebrew.
-- `lib/ai/gemini.ts` – Gemini wrapper and helper functions used by API routes.
+- `lib/ai/cerebras.ts` – Cerebras wrapper and helper functions used by API routes.
 - `lib/reflection/questions.ts` – reflection questions list/order used by the server.
 
 ---

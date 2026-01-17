@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-type Msg = { role: "user" | "model"; text: string };
+type Msg = { role: "user" | "assistant"; text: string };
 
 type StartRes =
   | {
@@ -70,7 +70,7 @@ export default function ReflectionChat() {
 
       if (!res.ok || !isOk<Extract<StartRes, { ok: true }>>(data)) {
         setStatus("unknown");
-        setMessages([{ role: "model", text: "לא הצלחתי להתחיל רפלקציה כרגע." }]);
+        setMessages([{ role: "assistant", text: "לא הצלחתי להתחיל רפלקציה כרגע." }]);
         setErrorMsg(("error" in data && data.error) ? data.error : "Failed to start");
         return;
       }
@@ -82,7 +82,7 @@ export default function ReflectionChat() {
       if (s) setSummary(s);
     } catch {
       setStatus("unknown");
-      setMessages([{ role: "model", text: "לא הצלחתי להתחיל רפלקציה כרגע." }]);
+      setMessages([{ role: "assistant", text: "לא הצלחתי להתחיל רפלקציה כרגע." }]);
       setErrorMsg("Network error");
     } finally {
       setLoading(false);
@@ -121,13 +121,13 @@ export default function ReflectionChat() {
       }
 
       const assistantText = (data.assistantText || "").trim() || "קיבלתי. אפשר לשתף עוד קצת?";
-      setMessages([...optimistic, { role: "model", text: assistantText }]);
+      setMessages([...optimistic, { role: "assistant", text: assistantText }]);
 
       setStatus(data.status || "in_progress");
     } catch (e: any) {
       setMessages([
         ...optimistic,
-        { role: "model", text: "משהו השתבש. נסו שוב בעוד רגע." },
+        { role: "assistant", text: "משהו השתבש. נסו שוב בעוד רגע." },
       ]);
       setErrorMsg(e?.message || "Request failed");
     } finally {
@@ -187,7 +187,7 @@ export default function ReflectionChat() {
       }
 
       setStatus("submitted");
-      setMessages((prev) => [...prev, { role: "model", text: "הוגש בהצלחה ✅" }]);
+      setMessages((prev) => [...prev, { role: "assistant", text: "הוגש בהצלחה ✅" }]);
     } catch (e: any) {
       setErrorMsg(e?.message || "Confirm failed");
     } finally {

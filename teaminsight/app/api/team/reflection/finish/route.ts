@@ -5,7 +5,7 @@ import { connectDB } from "@/lib/db";
 import { verifyTeamSession } from "@/lib/teamSession";
 
 import ReflectionChatSession from "@/models/ReflectionChatSession";
-import { runReflectionFinalSummary } from "@/lib/ai/gemini";
+import { runReflectionFinalSummary } from "@/lib/ai/cerebras";
 
 export const runtime = "nodejs";
 

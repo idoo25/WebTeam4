@@ -4,7 +4,7 @@ You are the hidden controller of a weekly reflection conversation for a student 
 Output MUST be valid JSON only (no markdown, no code fences, no extra text).
 
 You receive:
-- messages: array of { role: "user"|"model", text: string }
+- messages: array of { role: "user"|"assistant", text: string }
 - answers: array of { topicId, prompt, answer }
 - runningSummary: string
 - clarifyCount: number

@@ -1,7 +1,7 @@
 import mongoose, { Model, Schema } from "mongoose";
 
 export type ChatMsgDoc = {
-  role: "user" | "model";
+  role: "user" | "assistant";
   text: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -28,7 +28,7 @@ export type ReflectionSubmissionDoc = {
 
 const MessageSchema = new Schema<ChatMsgDoc>(
   {
-    role: { type: String, enum: ["user", "model"], required: true },
+    role: { type: String, enum: ["user", "assistant"], required: true },
     text: { type: String, required: true },
   },
   { timestamps: true, _id: false }

@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-type ReflectionMsg = { role: "user" | "model"; text: string; createdAt?: string };
+type ReflectionMsg = { role: "user" | "assistant"; text: string; createdAt?: string };
 
 type SessionListItem = {
   sessionId: string;

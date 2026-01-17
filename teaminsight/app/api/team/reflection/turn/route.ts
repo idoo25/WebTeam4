@@ -7,7 +7,7 @@ import { verifyTeamSession } from "@/lib/teamSession";
 import ReflectionChatSession from "@/models/ReflectionChatSession";
 import ReflectionSubmission from "@/models/ReflectionSubmission";
 
-import { runReflectionController, runReflectionInterviewer } from "@/lib/ai/gemini";
+import { runReflectionController, runReflectionInterviewer } from "@/lib/ai/cerebras";
 
 export const runtime = "nodejs";
 
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       nextIntent: controller.nextIntent,
     });
 
-    session.messages.push({ role: "model", text: assistantText });
+    session.messages.push({ role: "assistant", text: assistantText });
     await session.save();
 
     return NextResponse.json({
