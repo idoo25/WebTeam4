@@ -1,25 +1,22 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Reflection from "@/models/Reflection";
+import ReflectionChatSession from "@/models/ReflectionChatSession";
 import Team from "@/models/Team";
 
 export async function GET(_req, { params }) {
   try {
     await connectDB();
-    const { teamId } = params;
+    const { teamId } = (await params);
 
     const teamExists = await Team.exists({ teamId });
     if (!teamExists) return NextResponse.json({ error: "Team not found" }, { status: 404 });
 
-    const reflections = await Reflection.find({ teamId })
+    const reflections = await ReflectionChatSession.find({ teamId, status: "submitted" })
       .sort({ createdAt: -1 })
       .lean();
 
-    return NextResponse.json({ ok: true, reflections }, { status: 200 });
+    return NextResponse.json({ ok: true, reflections });
   } catch (err) {
-    return NextResponse.json(
-      { error: "Server error", details: String(err?.message || err) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Server error", details: String(err?.message || err) }, { status: 500 });
   }
 }

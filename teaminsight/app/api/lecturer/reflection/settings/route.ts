@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { jsonError } from "@/lib/apiUtils";
 import ReflectionProfile from "@/models/ReflectionProfile";
 import ReflectionSettings from "@/models/ReflectionSettings";
 
 export const runtime = "nodejs";
-
-function jsonError(status: number, error: string, details?: string) {
-  return NextResponse.json({ error, ...(details ? { details } : {}) }, { status });
-}
 
 async function ensureDefaults() {
   await ReflectionSettings.updateOne(
@@ -23,7 +20,6 @@ export async function GET() {
     await ensureDefaults();
 
     const settings = await ReflectionSettings.findOne({ singletonKey: "global" }).lean();
-
     return NextResponse.json({
       ok: true,
       selectedProfileKey: settings?.selectedProfileKey || "default",
@@ -40,10 +36,7 @@ export async function PUT(req: Request) {
     await connectDB();
     await ensureDefaults();
 
-    const body = (await req.json().catch(() => null)) as
-      | { selectedProfileKey?: string; weeklyInstructions?: string }
-      | null;
-
+    const body = (await req.json().catch(() => null)) as { selectedProfileKey?: string; weeklyInstructions?: string } | null;
     const selectedProfileKey = (body?.selectedProfileKey || "default").trim() || "default";
     const weeklyInstructions = (body?.weeklyInstructions || "").trim();
 
