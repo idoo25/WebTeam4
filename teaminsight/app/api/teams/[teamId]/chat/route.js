@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import ChatSession from "@/models/ChatSession";
+import ReflectionChatSession from "@/models/ReflectionChatSession";
 
 /* =========================
    GET /api/teams/[teamId]/chat
@@ -10,7 +10,7 @@ export async function GET(_req, context) {
     await connectDB();
     const { teamId } = await context.params;
 
-    const session = await ChatSession.findOne({ teamId }).lean();
+    const session = await ReflectionChatSession.findOne({ teamId }).lean();
 
     return NextResponse.json(
       { ok: true, messages: session?.messages || [] },

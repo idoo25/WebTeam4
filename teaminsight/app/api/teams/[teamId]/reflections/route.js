@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Reflection from "@/models/Reflection";
+import ReflectionChatSession from "@/models/ReflectionChatSession";
 import Team from "@/models/Team";
 
 export async function GET(_req, { params }) {
@@ -11,7 +11,7 @@ export async function GET(_req, { params }) {
     const teamExists = await Team.exists({ teamId });
     if (!teamExists) return NextResponse.json({ error: "Team not found" }, { status: 404 });
 
-    const reflections = await Reflection.find({ teamId })
+    const reflections = await ReflectionChatSession.find({ teamId })
       .sort({ createdAt: -1 })
       .lean();
 

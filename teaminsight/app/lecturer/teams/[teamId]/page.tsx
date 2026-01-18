@@ -16,17 +16,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-
-type Team = {
-  teamId: string;
-  projectName: string;
-  status: "green" | "yellow" | "red";
-  members?: { memberId: string; displayName: string }[];
-};
+import type { TeamWithMembers } from "@/types";
 
 export default function TeamDetailsPage() {
   const { teamId } = useParams();
-  const [team, setTeam] = useState<Team | null>(null);
+  const [team, setTeam] = useState<TeamWithMembers | null>(null);
   const [loading, setLoading] = useState(true);
   const [insightsTab, setInsightsTab] = useState<"strengths" | "risks">("strengths");
 

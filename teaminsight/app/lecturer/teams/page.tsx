@@ -8,18 +8,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-
-type Team = {
-  teamId: string;
-  projectName: string;
-  status: "green" | "yellow" | "red";
-};
+import type { TeamBasic } from "@/types";
 
 export default function TeamsPage() {
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [teams, setTeams] = useState<TeamBasic[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | Team["status"]>("all")
+  const [statusFilter, setStatusFilter] = useState<"all" | TeamBasic["status"]>("all")
 
   type SortKey = "teamId" | "projectName" | "status";
   type SortDir = "asc" | "desc";
@@ -27,7 +22,7 @@ export default function TeamsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("teamId");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-  const statusRank: Record<Team["status"], number> = {
+  const statusRank: Record<TeamBasic["status"], number> = {
     red: 0,
     yellow: 1,
     green: 2,

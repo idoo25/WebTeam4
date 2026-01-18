@@ -19,22 +19,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-
-type Team = {
-  teamId: string;
-  projectName?: string;
-  status?: "green" | "yellow" | "red";
-};
-
-type Alert = {
-  _id: string;
-  teamId: string;
-  severity: "yellow" | "red";
-  message: string;
-  emailTo?: string;
-  emailStatus?: string; // "pending" | "sent" | "failed" | ...
-  createdAt?: string;
-};
+import type { Team, Alert } from "@/types";
 
 export default function LecturerAlertsPage() {
   const [teams, setTeams] = useState<Team[]>([]);

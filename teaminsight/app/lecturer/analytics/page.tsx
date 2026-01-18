@@ -15,18 +15,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-
-/* ---------- Types ---------- */
-
-type Team = {
-  teamId: string;
-  status: "green" | "yellow" | "red";
-};
-
-type Alert = {
-  teamId: string;
-  severity: "yellow" | "red";
-};
+import type { TeamBasic, AlertBasic } from "@/types";
 
 /* ---------- Page ---------- */
 
@@ -43,17 +32,27 @@ export default function TeamsAnalyticsPage() {
 
   async function loadAnalytics() {
     try {
-      /* ---------- Teams ---------- */
-      const teamsRes = await fetch("/api/teams");
+      /* ---------- Fetch teams and alerts in parallel ---------- */
+      const [teamsRes, alertsRes] = await Promise.all([
+        fetch("/api/teams"),
+        fetch("/api/alerts"),
+      ]);
+
       const teamsJson = await teamsRes.json();
-      const teams: Team[] = Array.isArray(teamsJson?.teams)
+      const alertsJson = await alertsRes.json();
+
+      const teams: TeamBasic[] = Array.isArray(teamsJson?.teams)
         ? teamsJson.teams
         : [];
 
+      const allAlerts: AlertBasic[] = Array.isArray(alertsJson?.alerts)
+        ? alertsJson.alerts
+        : [];
+
       /* ---------- Status distribution (Pie) ---------- */
-      const green = teams.filter(t => t.status === "green").length;
-      const yellow = teams.filter(t => t.status === "yellow").length;
-      const red = teams.filter(t => t.status === "red").length;
+      const green = teams.filter((t) => t.status === "green").length;
+      const yellow = teams.filter((t) => t.status === "yellow").length;
+      const red = teams.filter((t) => t.status === "red").length;
 
       setStatusData([
         { name: "Green", value: green },
@@ -62,21 +61,15 @@ export default function TeamsAnalyticsPage() {
       ]);
 
       /* ---------- Alerts per team (by severity) ---------- */
-      const alertsPerTeam: any[] = [];
+      const alertsPerTeam = teams.map((team) => {
+        const teamAlerts = allAlerts.filter((a) => a.teamId === team.teamId);
 
-      for (const team of teams) {
-        const res = await fetch(`/api/alerts?teamId=${team.teamId}`);
-        const json = await res.json();
-        const alerts: Alert[] = Array.isArray(json?.alerts)
-          ? json.alerts
-          : [];
-
-        alertsPerTeam.push({
+        return {
           team: team.teamId,
-          yellow: alerts.filter(a => a.severity === "yellow").length,
-          red: alerts.filter(a => a.severity === "red").length,
-        });
-      }
+          yellow: teamAlerts.filter((a) => a.severity === "yellow").length,
+          red: teamAlerts.filter((a) => a.severity === "red").length,
+        };
+      });
 
       setAlertsData(alertsPerTeam);
     } catch (err) {

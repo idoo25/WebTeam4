@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Team from "@/models/Team";
 import Alert from "@/models/Alert";
-import Reflection from "@/models/Reflection";
+import ReflectionChatSession from "@/models/ReflectionChatSession";
 
 export async function GET(request, { params }) {
   try {
@@ -17,7 +17,7 @@ export async function GET(request, { params }) {
     }
 
     const alertsCount = await Alert.countDocuments({ teamId });
-    const reflectionsCount = await Reflection.countDocuments({ teamId });
+    const reflectionsCount = await ReflectionChatSession.countDocuments({ teamId });
 
     const strengths = [];
     const risks = [];

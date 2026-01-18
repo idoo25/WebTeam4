@@ -3,7 +3,7 @@
  */
 
 import { NextResponse } from "next/server";
-import connectDB from "../db";
+import { connectDB } from "../db";
 
 /**
  * Creates a standardized JSON error response
