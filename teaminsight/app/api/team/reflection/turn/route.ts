@@ -1,30 +1,25 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 import { connectDB } from "@/lib/db";
-import { verifyTeamSession } from "@/lib/teamSession";
-
 import ReflectionChatSession from "@/models/ReflectionChatSession";
 import { runReflectionController, runReflectionInterviewer } from "@/lib/ai/gemini";
-import { getEffectiveReflectionPolicy } from "@/lib/reflection/policy";
+import {
+  getTeamIdFromSession,
+  getRecentSubmittedSummaries,
+  getSessionPolicy,
+  ensureSessionHasPolicy,
+} from "@/lib/reflection/utils";
+import { jsonError } from "@/lib/utils/apiHelpers";
 
 export const runtime = "nodejs";
 
 type TurnBody = { text: string };
 
-function jsonError(status: number, error: string, details?: string) {
-  return NextResponse.json({ error, ...(details ? { details } : {}) }, { status });
-}
-
 export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get("team_session")?.value;
-
-    const payload = token ? verifyTeamSession(token) : null;
-    const teamId = payload?.teamId;
+    const teamId = await getTeamIdFromSession();
     if (!teamId) {
       return jsonError(401, "Unauthorized", "Missing/invalid team_session cookie or payload.teamId");
     }
@@ -45,37 +40,11 @@ export async function POST(req: Request) {
     session.messages.push({ role: "user", text: userText });
     session.currentIndex = (session.currentIndex || 0) + 1;
 
-    // Use the snapshot. If missing (legacy sessions), snapshot now.
-    if (!session.profileKey || typeof session.weeklyInstructionsSnapshot !== "string") {
-      const effective = await getEffectiveReflectionPolicy();
-      session.profileKey = session.profileKey || effective.profileKey || "default";
-      session.weeklyInstructionsSnapshot = session.weeklyInstructionsSnapshot || effective.weeklyInstructions || "";
-    }
+    // Ensure session has policy snapshot
+    await ensureSessionHasPolicy(session);
 
-    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-    const recentSubmitted = await ReflectionChatSession.find({
-      teamId,
-      status: "submitted",
-      updatedAt: { $gte: fourteenDaysAgo },
-    })
-      .sort({ updatedAt: -1 })
-      .limit(3)
-      .select({ aiSummary: 1 })
-      .lean();
-
-    const recentSummaries = recentSubmitted
-      .map((r: any) => r?.aiSummary)
-      .filter((s: any) => typeof s === "string" && s.trim().length > 0);
-
-    const effective = await getEffectiveReflectionPolicy();
-    const policy = {
-      profile: {
-        key: session.profileKey || effective.profileKey || "default",
-        title: effective.profile.title,
-        controllerAddendum: effective.profile.controllerAddendum,
-      },
-      weeklyInstructions: session.weeklyInstructionsSnapshot || "",
-    };
+    const recentSummaries = await getRecentSubmittedSummaries(teamId);
+    const policy = await getSessionPolicy(session);
 
     const controller = await runReflectionController({
       messages: session.messages,

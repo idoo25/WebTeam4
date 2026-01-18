@@ -1,32 +1,27 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import crypto from "crypto";
 
 import { connectDB } from "@/lib/db";
-import { verifyTeamSession } from "@/lib/teamSession";
-
 import ReflectionChatSession from "@/models/ReflectionChatSession";
 import { runReflectionController, runReflectionInterviewer } from "@/lib/ai/gemini";
-import { REFLECTION_TOPICS } from "@/lib/reflection/topics";
 import { getEffectiveReflectionPolicy } from "@/lib/reflection/policy";
+import {
+  getTeamIdFromSession,
+  getRecentSubmittedSummaries,
+  getSessionPolicy,
+  ensureSessionHasPolicy,
+} from "@/lib/reflection/utils";
+import { jsonError } from "@/lib/utils/apiHelpers";
 
 export const runtime = "nodejs";
 
 type Msg = { role: "user" | "model"; text: string };
 
-function jsonError(status: number, error: string, details?: string) {
-  return NextResponse.json({ error, ...(details ? { details } : {}) }, { status });
-}
-
 export async function POST() {
   try {
     await connectDB();
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get("team_session")?.value;
-
-    const payload = token ? verifyTeamSession(token) : null;
-    const teamId = payload?.teamId;
+    const teamId = await getTeamIdFromSession();
     if (!teamId) {
       return jsonError(401, "Unauthorized", "Missing/invalid team_session cookie or payload.teamId");
     }
@@ -36,8 +31,6 @@ export async function POST() {
       status: { $in: ["in_progress", "ready_to_submit"] },
     });
 
-    // Snapshot policy for NEW sessions (Approach A)
-    // Also used to fix legacy sessions that were created with "default" but never started.
     const effective = await getEffectiveReflectionPolicy();
 
     if (!session) {
@@ -51,18 +44,15 @@ export async function POST() {
         answers: [],
         aiSummary: "",
         submittedAt: null,
-
-        // Approach A: lock the session to the effective profile at creation time
         profileKey: effective.profileKey || "default",
         weeklyInstructionsSnapshot: effective.weeklyInstructions || "",
-
         reflectionScore: null,
         reflectionColor: null,
         reflectionReasons: [],
       });
     }
 
-    // Never return summary to the student.
+    // Return existing session if already started
     if ((session.messages || []).length > 0) {
       return NextResponse.json({
         ok: true,
@@ -74,41 +64,11 @@ export async function POST() {
       });
     }
 
-    // Legacy safety: if session exists but never started, and still "default",
-    // lock it to the currently effective profile now.
-    const currentKey = (session.profileKey || "").trim();
-    if (!currentKey || currentKey === "default") {
-      session.profileKey = effective.profileKey || "default";
-    }
+    // Ensure session has policy snapshot
+    await ensureSessionHasPolicy(session);
 
-    if (!session.weeklyInstructionsSnapshot || session.weeklyInstructionsSnapshot.trim().length === 0) {
-      session.weeklyInstructionsSnapshot = effective.weeklyInstructions || "";
-    }
-
-    // Recent submitted summaries (last 14 days)
-    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-    const recentSubmitted = await ReflectionChatSession.find({
-      teamId,
-      status: "submitted",
-      updatedAt: { $gte: fourteenDaysAgo },
-    })
-      .sort({ updatedAt: -1 })
-      .limit(3)
-      .select({ aiSummary: 1 })
-      .lean();
-
-    const recentSummaries = recentSubmitted
-      .map((r: any) => r?.aiSummary)
-      .filter((s: any) => typeof s === "string" && s.trim().length > 0);
-
-    const policy = {
-      profile: {
-        key: effective.profile.key,
-        title: effective.profile.title,
-        controllerAddendum: effective.profile.controllerAddendum,
-      },
-      weeklyInstructions: session.weeklyInstructionsSnapshot || "",
-    };
+    const recentSummaries = await getRecentSubmittedSummaries(teamId);
+    const policy = await getSessionPolicy(session);
 
     const controller = await runReflectionController({
       messages: session.messages,

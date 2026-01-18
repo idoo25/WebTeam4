@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 import { connectDB } from "@/lib/db";
-import { verifyTeamSession } from "@/lib/teamSession";
-
 import ReflectionChatSession from "@/models/ReflectionChatSession";
 import ReflectionProfile from "@/models/ReflectionProfile";
 import Team from "@/models/Team";
-
 import { runReflectionFinalSummary, runReflectionEvaluation } from "@/lib/ai/gemini";
+import { getTeamIdFromSession } from "@/lib/reflection/utils";
+import { jsonError } from "@/lib/utils/apiHelpers";
 
 export const runtime = "nodejs";
-
-function jsonError(status: number, error: string, details?: string) {
-  return NextResponse.json({ error, ...(details ? { details } : {}) }, { status });
-}
 
 function computeScore(evalRes: { quality: number; risk: number; compliance: number }) {
   const score =
@@ -32,11 +26,7 @@ export async function POST() {
   try {
     await connectDB();
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get("team_session")?.value;
-
-    const payload = token ? verifyTeamSession(token) : null;
-    const teamId = payload?.teamId;
+    const teamId = await getTeamIdFromSession();
     if (!teamId) {
       return jsonError(401, "Unauthorized", "Missing/invalid team_session cookie or payload.teamId");
     }
