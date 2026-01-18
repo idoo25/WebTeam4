@@ -54,11 +54,6 @@ const nextConfig: NextConfig = {
         destination: "/lecturer/dashboard",
         permanent: false,
       },
-      {
-        source: "/team",
-        destination: "/team/join",
-        permanent: false,
-      },
     ];
   },
 };
