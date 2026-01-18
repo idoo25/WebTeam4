@@ -9,23 +9,32 @@ export default function TeamGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function check() {
+      console.log("[TeamGate] Checking auth...");
       try {
         const res = await fetch("/api/team/me", { credentials: "include" });
         const data = await res.json();
 
-        // Check if team exists in response (not just res.ok)
+        console.log("[TeamGate] Response:", data);
+
         if (!data?.team) {
+          console.log("[TeamGate] No team, redirecting to /team/join");
           router.replace("/team/join");
           return;
         }
+
+        console.log("[TeamGate] Auth OK, showing content");
         setReady(true);
-      } catch {
+      } catch (err) {
+        console.log("[TeamGate] Error:", err);
         router.replace("/team/join");
       }
     }
     check();
   }, [router]);
 
-  if (!ready) return null;
+  if (!ready) {
+    console.log("[TeamGate] Not ready, returning null");
+    return null;
+  }
   return <>{children}</>;
 }
